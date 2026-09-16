@@ -2,26 +2,22 @@ import streamlit as st
 from pathlib import Path
 import json
 import uuid
-import html
 
-
-# ==================================================
-# PAGE SETTINGS
-# ==================================================
+# =========================================================
+# PAGE SETUP
+# =========================================================
 
 st.set_page_config(
     page_title="Nav Durga Utsav Samiti",
-    page_icon="🪔",
+    page_icon="🙏",
     layout="wide"
 )
 
-
-# ==================================================
+# =========================================================
 # FOLDERS
-# ==================================================
+# =========================================================
 
 BASE_DIR = Path(__file__).parent
-
 ASSETS_DIR = BASE_DIR / "assets"
 GALLERY_DIR = ASSETS_DIR / "gallery"
 DATA_DIR = BASE_DIR / "data"
@@ -30,35 +26,42 @@ ASSETS_DIR.mkdir(exist_ok=True)
 GALLERY_DIR.mkdir(parents=True, exist_ok=True)
 DATA_DIR.mkdir(exist_ok=True)
 
+# =========================================================
+# FILES
+# =========================================================
+
 CONTENT_FILE = DATA_DIR / "content.json"
 AARTI_FILE = DATA_DIR / "aarti.json"
-
-
-# ==================================================
-# ADMIN PASSWORD
-# ==================================================
+ACCOUNT_FILE = DATA_DIR / "accounts.json"
+PROGRAMS_FILE = DATA_DIR / "programs.json"
 
 ADMIN_PASSWORD = "HIMANSHU@786"
 
-
-# ==================================================
-# DEFAULT CONTENT
-# ==================================================
+# =========================================================
+# DEFAULT WEBSITE DATA
+# =========================================================
 
 DEFAULT_CONTENT = {
     "committee_name": "नव दुर्गा उत्सव समिति",
     "location": "New Salaiya",
     "tagline": "भक्ति, एकता और सेवा का उत्सव",
+
     "home_title": "जय माता दी 🙏",
     "home_text": "नव दुर्गा उत्सव समिति की आधिकारिक वेबसाइट पर आपका स्वागत है।",
+
     "about_title": "हमारे बारे में",
     "about_text": "नव दुर्गा उत्सव समिति New Salaiya की धार्मिक, सामाजिक और सांस्कृतिक समिति है।",
+
     "address": "New Salaiya, Sarni, Madhya Pradesh",
     "mobile": "यहाँ मोबाइल नंबर डालें",
     "email": "यहाँ ईमेल डालें",
+
     "footer_text": "श्रद्धा • सेवा • संस्कार"
 }
 
+# =========================================================
+# DEFAULT AARTI
+# =========================================================
 
 DEFAULT_AARTIS = [
     {
@@ -68,52 +71,164 @@ DEFAULT_AARTIS = [
     }
 ]
 
+# =========================================================
+# DEFAULT PROGRAMS
+# =========================================================
 
-# ==================================================
+DEFAULT_PROGRAMS = [
+    {
+        "id": "program_1",
+        "title": "🌸 कलश यात्रा",
+        "date": "16-10-2026",
+        "time": "सुबह 8:00 बजे",
+        "place": "समिति प्रांगण",
+        "details": "भव्य कलश यात्रा का आयोजन।"
+    },
+    {
+        "id": "program_2",
+        "title": "🙏 माता की आरती",
+        "date": "16-10-2026",
+        "time": "शाम 7:00 बजे",
+        "place": "दुर्गा पंडाल",
+        "details": "सामूहिक माता की आरती।"
+    },
+    {
+        "id": "program_3",
+        "title": "🍛 भंडारा",
+        "date": "17-10-2026",
+        "time": "दोपहर 12:00 बजे",
+        "place": "समिति प्रांगण",
+        "details": "सभी श्रद्धालुओं के लिए भंडारा।"
+    },
+    {
+        "id": "program_4",
+        "title": "🎶 सांस्कृतिक कार्यक्रम",
+        "date": "18-10-2026",
+        "time": "शाम 8:00 बजे",
+        "place": "मुख्य मंच",
+        "details": "भजन एवं सांस्कृतिक कार्यक्रम।"
+    }
+]
+
+# =========================================================
+# DEFAULT ACCOUNTS
+# =========================================================
+
+DEFAULT_ACCOUNTS = {
+    "donations": [
+        {
+            "id": "donation_1",
+            "नाम": "रमेश जी",
+            "तारीख": "10-09-2026",
+            "राशि": 5000,
+            "माध्यम": "Cash"
+        },
+        {
+            "id": "donation_2",
+            "नाम": "सुरेश जी",
+            "तारीख": "11-09-2026",
+            "राशि": 2500,
+            "माध्यम": "UPI"
+        }
+    ],
+
+    "expenses": [
+        {
+            "id": "expense_1",
+            "खर्च": "सजावट",
+            "तारीख": "11-09-2026",
+            "राशि": 2500
+        },
+        {
+            "id": "expense_2",
+            "खर्च": "पूजा सामग्री",
+            "तारीख": "12-09-2026",
+            "राशि": 1200
+        }
+    ]
+}
+
+# =========================================================
 # JSON FUNCTIONS
-# ==================================================
+# =========================================================
 
 def save_json(file_path, data):
     with open(file_path, "w", encoding="utf-8") as file:
-        json.dump(data, file, ensure_ascii=False, indent=4)
+        json.dump(
+            data,
+            file,
+            ensure_ascii=False,
+            indent=4
+        )
 
 
 def load_json(file_path, default_data):
+
     if not file_path.exists():
         save_json(file_path, default_data)
         return default_data
 
     try:
         with open(file_path, "r", encoding="utf-8") as file:
-            data = json.load(file)
-
-        if isinstance(default_data, dict):
-            if not isinstance(data, dict):
-                data = {}
-
-            for key, value in default_data.items():
-                if key not in data:
-                    data[key] = value
-
-        if isinstance(default_data, list):
-            if not isinstance(data, list):
-                data = default_data
-
-        save_json(file_path, data)
-        return data
+            return json.load(file)
 
     except Exception:
         save_json(file_path, default_data)
         return default_data
 
 
-content = load_json(CONTENT_FILE, DEFAULT_CONTENT)
-aartis = load_json(AARTI_FILE, DEFAULT_AARTIS)
+# =========================================================
+# LOAD DATA
+# =========================================================
 
+content = load_json(
+    CONTENT_FILE,
+    DEFAULT_CONTENT
+)
 
-# ==================================================
+aartis = load_json(
+    AARTI_FILE,
+    DEFAULT_AARTIS
+)
+
+programs = load_json(
+    PROGRAMS_FILE,
+    DEFAULT_PROGRAMS
+)
+
+accounts = load_json(
+    ACCOUNT_FILE,
+    DEFAULT_ACCOUNTS
+)
+
+# =========================================================
+# DATA SAFETY
+# =========================================================
+
+if not isinstance(content, dict):
+    content = DEFAULT_CONTENT.copy()
+
+if not isinstance(aartis, list):
+    aartis = DEFAULT_AARTIS.copy()
+
+if not isinstance(programs, list):
+    programs = DEFAULT_PROGRAMS.copy()
+
+if not isinstance(accounts, dict):
+    accounts = {
+        "donations": [],
+        "expenses": []
+    }
+
+if "donations" not in accounts:
+    accounts["donations"] = []
+
+if "expenses" not in accounts:
+    accounts["expenses"] = []
+
+# =========================================================
 # SESSION STATE
-# ==================================================
+# =========================================================
 
 if "admin_logged_in" not in st.session_state:
     st.session_state.admin_logged_in = False
@@ -121,121 +236,39 @@ if "admin_logged_in" not in st.session_state:
 if "gallery_version" not in st.session_state:
     st.session_state.gallery_version = 0
 
-
-# ==================================================
-# CSS DESIGN
-# ==================================================
+# =========================================================
+# CSS
+# =========================================================
 
 st.markdown(
     """
     <style>
 
-    .stApp {
-        background: linear-gradient(135deg, #fff8e8, #ffe4a8);
-    }
-
-    .top-header {
-    background:
-        linear-gradient(
-            90deg,
-            rgba(101, 0, 0, 0.70),
-            rgba(168, 0, 0, 0.55),
-            rgba(227, 109, 0, 0.45)
-        ),
-        url("./assets/mata_rani_header.PNG");
-
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-
-    padding: 45px 20px;
-    border-radius: 0 0 35px 35px;
-    text-align: center;
-    box-shadow: 0 8px 25px #6b210044;
-    margin-bottom: 25px;
-}
-
-    .top-header h1 {
-        color: white !important;
+    .main-title {
         font-size: 42px;
-        font-weight: 900;
-        margin: 0;
-        text-shadow: 2px 2px 5px #400000;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 5px;
     }
 
-    .top-header h2 {
-        color: #fff4c2 !important;
-        font-size: 24px;
-        margin-top: 12px;
-        font-weight: 700;
-    }
-
-    .top-header p {
-        color: white !important;
-        font-size: 19px;
-        margin-top: 10px;
+    .sub-title {
+        font-size: 20px;
+        text-align: center;
+        margin-bottom: 25px;
     }
 
     .hero-box {
-        background: linear-gradient(120deg, #fff3ce, #ffd477);
         padding: 35px;
-        border-radius: 28px;
-        box-shadow: 0 8px 22px #6b300033;
-        border-left: 8px solid #a80000;
-    }
-
-    .hero-box h1 {
-        color: #850000 !important;
-        font-size: 38px;
-        font-weight: 900;
-    }
-
-    .hero-box p {
-        color: #3e2114 !important;
-        font-size: 18px;
-        line-height: 1.8;
-    }
-
-    .section-heading {
-        color: #850000 !important;
-        font-size: 32px;
-        font-weight: 900;
-        border-bottom: 4px solid #e69a16;
-        padding-bottom: 8px;
-        margin-top: 20px;
-        margin-bottom: 22px;
-    }
-
-    .custom-card {
-        background: white;
-        padding: 25px;
-        border-radius: 22px;
-        border: 1px solid #e4b45d;
-        box-shadow: 0 5px 18px #6b300022;
-        margin-bottom: 20px;
-    }
-
-    .custom-card h3 {
-        color: #8b0000 !important;
-    }
-
-    .custom-card p {
-        color: #352116 !important;
-        font-size: 17px;
-        line-height: 1.7;
-    }
-
-    .footer-box {
-        background: linear-gradient(120deg, #650000, #a80000);
-        padding: 28px;
-        border-radius: 25px 25px 0 0;
+        border-radius: 25px;
         text-align: center;
-        margin-top: 40px;
+        border: 1px solid rgba(128,128,128,0.30);
+        margin-bottom: 25px;
     }
 
-    .footer-box h3,
-    .footer-box p {
-        color: white !important;
+    .footer-text {
+        text-align: center;
+        opacity: 0.70;
+        padding: 15px;
     }
 
     </style>
@@ -243,36 +276,43 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
-# ==================================================
-# HEADER
-# ==================================================
+# =========================================================
+# WEBSITE HEADER
+# =========================================================
 
 st.markdown(
     f"""
-    <div class="top-header">
-        <h1>🪔 {html.escape(str(content.get("committee_name", DEFAULT_CONTENT["committee_name"])))}</h1>
-        <h2>{html.escape(str(content.get("location", DEFAULT_CONTENT["location"])))}</h2>
-        <p>🌺 {html.escape(str(content.get("tagline", DEFAULT_CONTENT["tagline"])))}</p>
+    <div class="main-title">
+        🙏 {content.get("committee_name", "नव दुर्गा उत्सव समिति")}
     </div>
     """,
     unsafe_allow_html=True
 )
 
+st.markdown(
+    f"""
+    <div class="sub-title">
+        {content.get("location", "")}
+        •
+        {content.get("tagline", "")}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-# ==================================================
+# =========================================================
 # MENU
-# ==================================================
+# =========================================================
 
 menu = st.radio(
-    "मुख्य मेन्यू",
+    "Menu",
     [
         "🏠 Home",
-        "📖 हमारे बारे में",
+        "ℹ️ About",
         "🎉 कार्यक्रम",
         "🖼️ Gallery",
-        "📚 आरती बुक्स",
         "💰 हिसाब-किताब",
+        "🙏 आरती",
         "📞 संपर्क करें",
         "🔐 Admin Panel"
     ],
@@ -282,432 +322,946 @@ menu = st.radio(
 
 st.divider()
 
-
-# ==================================================
+# =========================================================
 # HOME
-# ==================================================
+# =========================================================
 
 if menu == "🏠 Home":
 
     st.markdown(
-        '<div class="section-heading">🌺 स्वागत है</div>',
+        '<div class="hero-box">',
         unsafe_allow_html=True
     )
 
-    left, right = st.columns([1.15, 1], gap="large")
-
-    with left:
-        st.markdown(
-            f"""
-            <div class="hero-box">
-                <h1>{html.escape(str(content.get("home_title", "जय माता दी 🙏")))}</h1>
-                <p>{html.escape(str(content.get("home_text", "")))}</p>
-                <p>{html.escape(str(content.get("about_text", "")))}</p>
-            </div>
-            """,
-            unsafe_allow_html=True
+    st.title(
+        content.get(
+            "home_title",
+            "जय माता दी 🙏"
         )
+    )
 
-    with right:
-        home_image = ASSETS_DIR / "home_design.png"
+    st.write(
+        content.get(
+            "home_text",
+            ""
+        )
+    )
 
-       
     st.markdown(
-        '<div class="section-heading">✨ हमारी विशेषताएँ</div>',
+        '</div>',
         unsafe_allow_html=True
     )
 
-    c1, c2, c3 = st.columns(3)
+    # Main image
+    image_files = [
+        p for p in ASSETS_DIR.iterdir()
+        if p.is_file()
+        and p.suffix.lower()
+        in [".png", ".jpg", ".jpeg", ".webp"]
+    ]
 
-    with c1:
-        st.markdown(
-            """
-            <div class="custom-card">
-                <h3>🙏 धार्मिक आयोजन</h3>
-                <p>पूजा, आरती, नवरात्रि और धार्मिक कार्यक्रम।</p>
-            </div>
-            """,
-            unsafe_allow_html=True
+    if image_files:
+
+        st.image(
+            str(image_files[0]),
+            use_container_width=True
         )
 
-    with c2:
-        st.markdown(
-            """
-            <div class="custom-card">
-                <h3>🤝 सामाजिक सेवा</h3>
-                <p>समाज में सहयोग, एकता और सेवा की भावना।</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    st.subheader("🌺 समिति की विशेषताएँ")
 
-    with c3:
-        st.markdown(
-            """
-            <div class="custom-card">
-                <h3>🌸 सांस्कृतिक कार्यक्रम</h3>
-                <p>भजन, कीर्तन और सांस्कृतिक कार्यक्रम।</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.info("🙏 भक्ति")
+
+    with col2:
+        st.success("🤝 एकता")
+
+    with col3:
+        st.warning("❤️ सेवा")
 
 
-# ==================================================
+# =========================================================
 # ABOUT
-# ==================================================
+# =========================================================
 
-elif menu == "📖 हमारे बारे में":
+elif menu == "ℹ️ About":
 
-    st.markdown(
-        '<div class="section-heading">📖 हमारे बारे में</div>',
-        unsafe_allow_html=True
+    st.title(
+        content.get(
+            "about_title",
+            "हमारे बारे में"
+        )
     )
 
-    st.markdown(
-        f"""
-        <div class="custom-card">
-            <h3>{html.escape(str(content.get("committee_name", "")))}</h3>
-            <p>{html.escape(str(content.get("about_text", "")))}</p>
-            <p><b>स्थान:</b> {html.escape(str(content.get("location", "")))}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.write(
+        content.get(
+            "about_text",
+            ""
+        )
+    )
+
+    st.subheader("📍 हमारा पता")
+
+    st.write(
+        content.get(
+            "address",
+            ""
+        )
     )
 
 
-# ==================================================
+# =========================================================
 # PROGRAMS
-# ==================================================
+# =========================================================
 
 elif menu == "🎉 कार्यक्रम":
 
-    st.markdown(
-        '<div class="section-heading">🎉 हमारे कार्यक्रम</div>',
-        unsafe_allow_html=True
-    )
+    st.title("🎉 कार्यक्रम")
 
-    programs = [
-        ("🌸 कलश यात्रा", "सुबह 8:00 बजे", "समिति प्रांगण"),
-        ("🙏 माता की आरती", "शाम 7:00 बजे", "दुर्गा पंडाल"),
-        ("🍛 भंडारा", "दोपहर 12:00 बजे", "समिति प्रांगण"),
-        ("🎶 सांस्कृतिक कार्यक्रम", "शाम 8:00 बजे", "मुख्य मंच")
-    ]
+    if programs:
 
-    for title, time, place in programs:
-        st.markdown(
-            f"""
-            <div class="custom-card">
-                <h3>{title}</h3>
-                <p><b>समय:</b> {time}</p>
-                <p><b>स्थान:</b> {place}</p>
-            </div>
-            """,
-            unsafe_allow_html=True
+        for program in programs:
+
+            with st.container(border=True):
+
+                st.subheader(
+                    program.get(
+                        "title",
+                        "कार्यक्रम"
+                    )
+                )
+
+                st.write(
+                    "📅 तारीख:",
+                    program.get(
+                        "date",
+                        ""
+                    )
+                )
+
+                st.write(
+                    "⏰ समय:",
+                    program.get(
+                        "time",
+                        ""
+                    )
+                )
+
+                st.write(
+                    "📍 स्थान:",
+                    program.get(
+                        "place",
+                        ""
+                    )
+                )
+
+                if program.get("details"):
+
+                    st.write(
+                        program.get(
+                            "details",
+                            ""
+                        )
+                    )
+
+    else:
+
+        st.info(
+            "अभी कोई कार्यक्रम उपलब्ध नहीं है।"
         )
 
 
-# ==================================================
+# =========================================================
 # GALLERY
-# ==================================================
+# =========================================================
 
 elif menu == "🖼️ Gallery":
 
-    st.markdown(
-        '<div class="section-heading">🖼️ समिति Gallery</div>',
-        unsafe_allow_html=True
+    st.title("🖼️ समिति Gallery")
+
+    st.write(
+        "समिति की यादगार तस्वीरें यहाँ देखें।"
     )
 
     uploaded_image = st.file_uploader(
         "📷 Gallery में image upload करें",
-        type=["png", "jpg", "jpeg", "webp"],
+        type=[
+            "png",
+            "jpg",
+            "jpeg",
+            "webp"
+        ],
         key=f"gallery_{st.session_state.gallery_version}"
     )
 
     if uploaded_image is not None:
 
-        file_name = f"{uuid.uuid4().hex}_{uploaded_image.name}"
+        file_name = (
+            f"{uuid.uuid4().hex}_"
+            f"{Path(uploaded_image.name).name}"
+        )
+
         save_path = GALLERY_DIR / file_name
 
-        with open(save_path, "wb") as file:
-            file.write(uploaded_image.getbuffer())
+        with open(
+            save_path,
+            "wb"
+        ) as file:
 
-        st.success("Image Gallery में upload हो गई है।")
+            file.write(
+                uploaded_image.getbuffer()
+            )
+
+        st.success(
+            "Image Gallery में upload हो गई।"
+        )
+
         st.session_state.gallery_version += 1
+
         st.rerun()
 
-    gallery_images = [
-        file for file in GALLERY_DIR.iterdir()
-        if file.is_file()
-        and file.suffix.lower() in [".png", ".jpg", ".jpeg", ".webp"]
-    ]
-
-    if gallery_images:
-        columns = st.columns(3)
-
-        for index, image_path in enumerate(sorted(gallery_images)):
-            with columns[index % 3]:
-                st.image(
-                    str(image_path),
-                    caption=image_path.name,
-                    use_container_width=True
-                )
-    else:
-        st.info("अभी Gallery में कोई image नहीं है।")
-
-
-# ==================================================
-# AARTI BOOKS
-# ==================================================
-
-elif menu == "📚 आरती बुक्स":
-
-    st.markdown(
-        '<div class="section-heading">📚 आरती बुक्स</div>',
-        unsafe_allow_html=True
+    gallery_images = sorted(
+        [
+            file
+            for file in GALLERY_DIR.iterdir()
+            if file.is_file()
+            and file.suffix.lower()
+            in [
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".webp"
+            ]
+        ]
     )
 
-    st.write("यहाँ समिति की सभी आरतियाँ पढ़ सकते हैं।")
+    st.write(
+        f"📸 कुल तस्वीरें: {len(gallery_images)}"
+    )
 
-    if not aartis:
-        st.info("अभी कोई आरती उपलब्ध नहीं है।")
+    if gallery_images:
 
-    for index, aarti in enumerate(aartis, start=1):
-        title = aarti.get("title", f"आरती {index}")
-        text = aarti.get("text", "")
+        columns = st.columns(3)
 
-        with st.expander(f"🙏 {index}. {title}"):
-            st.write(text)
+        for index, image_path in enumerate(
+            gallery_images
+        ):
 
-# ==================================================
-# ACCOUNT PAGE
-# ==================================================
+            with columns[index % 3]:
+
+                st.image(
+                    str(image_path),
+                    use_container_width=True
+                )
+
+    else:
+
+        st.info(
+            "अभी Gallery में कोई image नहीं है।"
+        )
+
+
+# =========================================================
+# ACCOUNTS
+# =========================================================
 
 elif menu == "💰 हिसाब-किताब":
 
-    st.markdown(
-        '<div class="section-heading">💰 समिति का हिसाब-किताब</div>',
-        unsafe_allow_html=True
+    st.title("💰 हिसाब-किताब")
+
+    total_donation = sum(
+        float(item.get("राशि", 0) or 0)
+        for item in accounts["donations"]
     )
 
-    donations = [
-        {
-            "नाम": "रमेश जी",
-            "तारीख": "10-09-2026",
-            "राशि": 5000,
-            "माध्यम": "Cash"
-        },
-        {
-            "नाम": "सुरेश जी",
-            "तारीख": "11-09-2026",
-            "राशि": 2500,
-            "माध्यम": "UPI"
-        }
-    ]
+    total_expense = sum(
+        float(item.get("राशि", 0) or 0)
+        for item in accounts["expenses"]
+    )
 
-    expenses = [
-        {
-            "खर्च": "सजावट",
-            "तारीख": "11-09-2026",
-            "राशि": 2500
-        },
-        {
-            "खर्च": "पूजा सामग्री",
-            "तारीख": "12-09-2026",
-            "राशि": 1200
-        }
-    ]
-
-    total_donation = sum(item["राशि"] for item in donations)
-    total_expense = sum(item["राशि"] for item in expenses)
     balance = total_donation - total_expense
 
-    a, b, c = st.columns(3)
+    col1, col2, col3 = st.columns(3)
 
-    a.metric("कुल चंदा", f"₹{total_donation:,}")
-    b.metric("कुल खर्च", f"₹{total_expense:,}")
-    c.metric("बाकी राशि", f"₹{balance:,}")
+    with col1:
+        st.metric(
+            "📥 कुल चंदा",
+            f"₹{total_donation:,.0f}"
+        )
 
-    st.subheader("📥 चंदे का विवरण")
-    st.dataframe(donations, use_container_width=True, hide_index=True)
+    with col2:
+        st.metric(
+            "📤 कुल खर्च",
+            f"₹{total_expense:,.0f}"
+        )
 
-    st.subheader("📤 खर्च का विवरण")
-    st.dataframe(expenses, use_container_width=True, hide_index=True)
+    with col3:
+        st.metric(
+            "💵 शेष राशि",
+            f"₹{balance:,.0f}"
+        )
+
+    st.divider()
+
+    # =========================================================
+    # DONATION SECTION
+    # =========================================================
+
+    donation_title_col, donation_button_col = st.columns([6, 1])
+
+    with donation_title_col:
+        st.subheader("📥 चंदा")
+
+    with donation_button_col:
+        add_donation_public = st.button(
+            "➕",
+            key="public_add_donation_button",
+            use_container_width=True
+        )
+
+    if add_donation_public:
+        st.session_state["show_public_donation_form"] = True
+
+    if "show_public_donation_form" not in st.session_state:
+        st.session_state["show_public_donation_form"] = False
+
+    if st.session_state["show_public_donation_form"]:
+
+        with st.container(border=True):
+
+            st.write("➕ **नया चंदा जोड़ें**")
+            st.info("चंदा जोड़ने के लिए Admin Password डालें।")
+
+            public_donation_password = st.text_input(
+                "Admin Password",
+                type="password",
+                key="public_donation_password"
+            )
+
+            if public_donation_password == ADMIN_PASSWORD:
+
+                with st.form("public_donation_form"):
+
+                    donor_name_public = st.text_input("नाम")
+
+                    donor_date_public = st.text_input(
+                        "तारीख",
+                        placeholder="जैसे 16-09-2026"
+                    )
+
+                    donor_amount_public = st.number_input(
+                        "राशि",
+                        min_value=0,
+                        step=100
+                    )
+
+                    donor_method_public = st.selectbox(
+                        "माध्यम",
+                        [
+                            "Cash",
+                            "UPI",
+                            "Bank",
+                            "Other"
+                        ]
+                    )
+
+                    save_public_donation = st.form_submit_button(
+                        "💾 चंदा सेव करें"
+                    )
+
+                    if save_public_donation:
+
+                        if not donor_name_public.strip():
+                            st.warning("नाम भरें।")
+
+                        elif donor_amount_public <= 0:
+                            st.warning("राशि 0 से ज्यादा रखें।")
+
+                        else:
+                            accounts["donations"].append(
+                                {
+                                    "id": f"donation_{uuid.uuid4().hex}",
+                                    "नाम": donor_name_public.strip(),
+                                    "तारीख": donor_date_public.strip(),
+                                    "राशि": donor_amount_public,
+                                    "माध्यम": donor_method_public
+                                }
+                            )
+
+                            save_json(
+                                ACCOUNT_FILE,
+                                accounts
+                            )
+
+                            st.success(
+                                "चंदा सफलतापूर्वक जोड़ दिया गया।"
+                            )
+
+                            st.session_state[
+                                "show_public_donation_form"
+                            ] = False
+
+                            st.rerun()
+
+            elif public_donation_password:
+                st.error("Password गलत है।")
+
+            if st.button(
+                "✖ बंद करें",
+                key="close_public_donation_form"
+            ):
+                st.session_state[
+                    "show_public_donation_form"
+                ] = False
+                st.rerun()
+
+    if accounts["donations"]:
+
+        donation_rows = []
+
+        for number, item in enumerate(
+            accounts["donations"],
+            start=1
+        ):
+
+            donation_rows.append(
+                {
+                    "क्र.": number,
+                    "👤 नाम": item.get("नाम", ""),
+                    "📅 तारीख": item.get("तारीख", ""),
+                    "💰 राशि": f"₹{float(item.get('राशि', 0)):,.0f}",
+                    "💳 माध्यम": item.get("माध्यम", "")
+                }
+            )
+
+        st.table(donation_rows)
+
+    else:
+        st.info("अभी कोई चंदा दर्ज नहीं है।")
+
+    st.divider()
+
+    # =========================================================
+    # EXPENSE SECTION
+    # =========================================================
+
+    expense_title_col, expense_button_col = st.columns([6, 1])
+
+    with expense_title_col:
+        st.subheader("📤 खर्च")
+
+    with expense_button_col:
+        add_expense_public = st.button(
+            "➕",
+            key="public_add_expense_button",
+            use_container_width=True
+        )
+
+    if add_expense_public:
+        st.session_state["show_public_expense_form"] = True
+
+    if "show_public_expense_form" not in st.session_state:
+        st.session_state["show_public_expense_form"] = False
+
+    if st.session_state["show_public_expense_form"]:
+
+        with st.container(border=True):
+
+            st.write("➕ **नया खर्च जोड़ें**")
+            st.info("खर्च जोड़ने के लिए Admin Password डालें।")
+
+            public_expense_password = st.text_input(
+                "Admin Password",
+                type="password",
+                key="public_expense_password"
+            )
+
+            if public_expense_password == ADMIN_PASSWORD:
+
+                with st.form("public_expense_form"):
+
+                    expense_name_public = st.text_input(
+                        "खर्च का नाम"
+                    )
+
+                    expense_date_public = st.text_input(
+                        "तारीख",
+                        placeholder="जैसे 16-09-2026"
+                    )
+
+                    expense_amount_public = st.number_input(
+                        "राशि",
+                        min_value=0,
+                        step=100
+                    )
+
+                    save_public_expense = st.form_submit_button(
+                        "💾 खर्च सेव करें"
+                    )
+
+                    if save_public_expense:
+
+                        if not expense_name_public.strip():
+                            st.warning("खर्च का नाम भरें।")
+
+                        elif expense_amount_public <= 0:
+                            st.warning(
+                                "राशि 0 से ज्यादा रखें।"
+                            )
+
+                        else:
+                            accounts["expenses"].append(
+                                {
+                                    "id": f"expense_{uuid.uuid4().hex}",
+                                    "खर्च": expense_name_public.strip(),
+                                    "तारीख": expense_date_public.strip(),
+                                    "राशि": expense_amount_public
+                                }
+                            )
+
+                            save_json(
+                                ACCOUNT_FILE,
+                                accounts
+                            )
+
+                            st.success(
+                                "खर्च सफलतापूर्वक जोड़ दिया गया।"
+                            )
+
+                            st.session_state[
+                                "show_public_expense_form"
+                            ] = False
+
+                            st.rerun()
+
+            elif public_expense_password:
+                st.error("Password गलत है।")
+
+            if st.button(
+                "✖ बंद करें",
+                key="close_public_expense_form"
+            ):
+                st.session_state[
+                    "show_public_expense_form"
+                ] = False
+                st.rerun()
+
+    if accounts["expenses"]:
+
+        expense_rows = []
+
+        for number, item in enumerate(
+            accounts["expenses"],
+            start=1
+        ):
+
+            expense_rows.append(
+                {
+                    "क्र.": number,
+                    "🧾 खर्च": item.get("खर्च", ""),
+                    "📅 तारीख": item.get("तारीख", ""),
+                    "💰 राशि": f"₹{float(item.get('राशि', 0)):,.0f}"
+                }
+            )
+
+        st.table(expense_rows)
+
+    else:
+        st.info("अभी कोई खर्च दर्ज नहीं है।")
+
+    st.divider()
+
+    # =========================================================
+    # FINAL SUMMARY
+    # =========================================================
+
+    st.subheader("📊 हिसाब का सारांश")
+
+    summary_col1, summary_col2, summary_col3 = st.columns(3)
+
+    with summary_col1:
+        st.write("📥 **कुल चंदा**")
+        st.write(f"### ₹{total_donation:,.0f}")
+
+    with summary_col2:
+        st.write("📤 **कुल खर्च**")
+        st.write(f"### ₹{total_expense:,.0f}")
+
+    with summary_col3:
+        st.write("💵 **बाकी राशि**")
+        st.write(f"### ₹{balance:,.0f}")
 
 
-# ==================================================
-# CONTACT PAGE
-# ==================================================
+# =========================================================
+# AARTI
+# =========================================================
+
+elif menu == "🙏 आरती":
+
+    st.title("🙏 आरती")
+
+    if aartis:
+
+        for index, aarti in enumerate(aartis):
+
+            with st.expander(
+                f"🙏 {aarti.get('title', 'आरती')}",
+                expanded=(index == 0)
+            ):
+
+                st.write(
+                    aarti.get(
+                        "text",
+                        ""
+                    )
+                )
+
+    else:
+
+        st.info(
+            "अभी कोई आरती नहीं है।"
+        )
+
+    st.divider()
+
+    # PLUS BUTTON
+    with st.expander("➕ नई आरती जोड़ें"):
+
+        st.info(
+            "नई आरती जोड़ने के लिए Admin Password डालें।"
+        )
+
+        aarti_password = st.text_input(
+            "Admin Password",
+            type="password",
+            key="public_aarti_password"
+        )
+
+        if aarti_password:
+
+            if aarti_password == ADMIN_PASSWORD:
+
+                with st.form(
+                    "new_aarti_form"
+                ):
+
+                    new_title = st.text_input(
+                        "आरती का नाम"
+                    )
+
+                    new_text = st.text_area(
+                        "आरती का पूरा पाठ",
+                        height=250
+                    )
+
+                    add_button = st.form_submit_button(
+                        "➕ आरती जोड़ें"
+                    )
+
+                    if add_button:
+
+                        if (
+                            not new_title.strip()
+                            or
+                            not new_text.strip()
+                        ):
+
+                            st.warning(
+                                "आरती का नाम और पाठ दोनों भरें।"
+                            )
+
+                        else:
+
+                            aartis.append(
+                                {
+                                    "id":
+                                    f"aarti_{uuid.uuid4().hex}",
+
+                                    "title":
+                                    new_title.strip(),
+
+                                    "text":
+                                    new_text.strip()
+                                }
+                            )
+
+                            save_json(
+                                AARTI_FILE,
+                                aartis
+                            )
+
+                            st.success(
+                                "नई आरती जोड़ दी गई।"
+                            )
+
+                            st.rerun()
+
+            else:
+
+                st.error(
+                    "Password गलत है।"
+                )
+
+
+# =========================================================
+# CONTACT
+# =========================================================
 
 elif menu == "📞 संपर्क करें":
 
-    st.markdown(
-        '<div class="section-heading">📞 संपर्क करें</div>',
-        unsafe_allow_html=True
+    st.title("📞 संपर्क करें")
+
+    st.write(
+        f"📍 पता: "
+        f"{content.get('address', '')}"
     )
 
-    st.markdown(
-        f"""
-        <div class="custom-card">
-            <h3>📍 पता</h3>
-            <p>{html.escape(str(content.get("address", "")))}</p>
+    st.write(
+        f"📱 मोबाइल: "
+        f"{content.get('mobile', '')}"
+    )
 
-            <h3>📱 मोबाइल</h3>
-            <p>{html.escape(str(content.get("mobile", "")))}</p>
-
-            <h3>📧 ईमेल</h3>
-            <p>{html.escape(str(content.get("email", "")))}</p>
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.write(
+        f"📧 Email: "
+        f"{content.get('email', '')}"
     )
 
 
-# ==================================================
+# =========================================================
 # ADMIN PANEL
-# ==================================================
+# =========================================================
 
 elif menu == "🔐 Admin Panel":
 
-    st.markdown(
-        '<div class="section-heading">🔐 Admin Panel</div>',
-        unsafe_allow_html=True
-    )
+    st.title("🔐 Admin Panel")
+
+    # -----------------------------------------------------
+    # LOGIN
+    # -----------------------------------------------------
 
     if not st.session_state.admin_logged_in:
 
         password = st.text_input(
-            "Admin password डालें",
-            type="password"
+            "Admin Password",
+            type="password",
+            key="admin_password"
         )
 
         if st.button("🔓 Login"):
 
             if password == ADMIN_PASSWORD:
+
                 st.session_state.admin_logged_in = True
-                st.success("Admin Login सफल हुआ।")
+
                 st.rerun()
+
             else:
-                st.error("गलत password है।")
+
+                st.error(
+                    "Password गलत है।"
+                )
+
+    # -----------------------------------------------------
+    # ADMIN LOGGED IN
+    # -----------------------------------------------------
 
     else:
 
-        st.success("आप Admin Panel में लॉगिन हैं।")
+        st.success(
+            "Admin login successful."
+        )
 
         if st.button("🚪 Logout"):
+
             st.session_state.admin_logged_in = False
+
             st.rerun()
 
-        st.divider()
-
-        admin_tab1, admin_tab2, admin_tab3 = st.tabs(
+        admin_tab1, admin_tab2, admin_tab3, admin_tab4, admin_tab5 = st.tabs(
             [
                 "✏️ Website Edit",
-                "📚 आरती Edit",
-                "🖼️ Gallery Edit"
+                "🙏 आरती Edit",
+                "🎉 कार्यक्रम Edit",
+                "🖼️ Gallery Edit",
+                "💰 हिसाब Edit"
             ]
         )
 
-        # ==================================================
+        # =================================================
         # WEBSITE EDIT
-        # ==================================================
+        # =================================================
 
         with admin_tab1:
 
-            st.subheader("✏️ Website की सभी जानकारी Edit करें")
+            st.subheader(
+                "✏️ Website Content Edit"
+            )
 
-            with st.form("complete_website_edit_form"):
+            with st.form(
+                "website_edit_form"
+            ):
 
-                new_committee_name = st.text_input(
-                    "समिति का नाम",
-                    value=str(content.get("committee_name", ""))
+                committee_name = st.text_input(
+                    "Committee Name",
+                    value=content.get(
+                        "committee_name",
+                        ""
+                    )
                 )
 
-                new_location = st.text_input(
-                    "स्थान",
-                    value=str(content.get("location", ""))
+                location = st.text_input(
+                    "Location",
+                    value=content.get(
+                        "location",
+                        ""
+                    )
                 )
 
-                new_tagline = st.text_input(
+                tagline = st.text_input(
                     "Tagline",
-                    value=str(content.get("tagline", ""))
+                    value=content.get(
+                        "tagline",
+                        ""
+                    )
                 )
 
-                new_home_title = st.text_input(
-                    "Home Heading",
-                    value=str(content.get("home_title", ""))
+                home_title = st.text_input(
+                    "Home Title",
+                    value=content.get(
+                        "home_title",
+                        ""
+                    )
                 )
 
-                new_home_text = st.text_area(
-                    "Home का मुख्य संदेश",
-                    value=str(content.get("home_text", ""))
+                home_text = st.text_area(
+                    "Home Text",
+                    value=content.get(
+                        "home_text",
+                        ""
+                    ),
+                    height=120
                 )
 
-                new_about_title = st.text_input(
-                    "About Heading",
-                    value=str(content.get("about_title", ""))
+                about_title = st.text_input(
+                    "About Title",
+                    value=content.get(
+                        "about_title",
+                        ""
+                    )
                 )
 
-                new_about_text = st.text_area(
-                    "About की पूरी जानकारी",
-                    value=str(content.get("about_text", ""))
+                about_text = st.text_area(
+                    "About Text",
+                    value=content.get(
+                        "about_text",
+                        ""
+                    ),
+                    height=160
                 )
 
-                new_address = st.text_input(
-                    "पूरा पता",
-                    value=str(content.get("address", ""))
+                address = st.text_input(
+                    "Address",
+                    value=content.get(
+                        "address",
+                        ""
+                    )
                 )
 
-                new_mobile = st.text_input(
-                    "मोबाइल नंबर",
-                    value=str(content.get("mobile", ""))
+                mobile = st.text_input(
+                    "Mobile",
+                    value=content.get(
+                        "mobile",
+                        ""
+                    )
                 )
 
-                new_email = st.text_input(
-                    "ईमेल",
-                    value=str(content.get("email", ""))
+                email = st.text_input(
+                    "Email",
+                    value=content.get(
+                        "email",
+                        ""
+                    )
                 )
 
-                new_footer_text = st.text_input(
+                footer_text = st.text_input(
                     "Footer Text",
-                    value=str(content.get("footer_text", ""))
+                    value=content.get(
+                        "footer_text",
+                        ""
+                    )
                 )
 
-                save_website = st.form_submit_button(
-                    "💾 सभी जानकारी Save करें"
+                save_button = st.form_submit_button(
+                    "💾 Save Website"
                 )
 
-                if save_website:
+                if save_button:
 
                     content = {
-                        "committee_name": new_committee_name,
-                        "location": new_location,
-                        "tagline": new_tagline,
-                        "home_title": new_home_title,
-                        "home_text": new_home_text,
-                        "about_title": new_about_title,
-                        "about_text": new_about_text,
-                        "address": new_address,
-                        "mobile": new_mobile,
-                        "email": new_email,
-                        "footer_text": new_footer_text
+                        "committee_name":
+                        committee_name,
+
+                        "location":
+                        location,
+
+                        "tagline":
+                        tagline,
+
+                        "home_title":
+                        home_title,
+
+                        "home_text":
+                        home_text,
+
+                        "about_title":
+                        about_title,
+
+                        "about_text":
+                        about_text,
+
+                        "address":
+                        address,
+
+                        "mobile":
+                        mobile,
+
+                        "email":
+                        email,
+
+                        "footer_text":
+                        footer_text
                     }
 
-                    save_json(CONTENT_FILE, content)
+                    save_json(
+                        CONTENT_FILE,
+                        content
+                    )
 
-                    st.success("Website की सभी जानकारी save हो गई।")
+                    st.success(
+                        "Website content save हो गया।"
+                    )
+
                     st.rerun()
 
-
-        # ==================================================
+        # =================================================
         # AARTI EDIT
-        # ==================================================
+        # =================================================
 
         with admin_tab2:
 
-            st.subheader("📚 नई आरती जोड़ें")
+            st.subheader(
+                "🙏 आरती Manage करें"
+            )
 
-            with st.form("new_aarti_form"):
+            # ADD AARTI
+            with st.form(
+                "admin_add_aarti_form"
+            ):
+
+                st.write(
+                    "➕ नई आरती"
+                )
 
                 new_aarti_title = st.text_input(
                     "आरती का नाम"
@@ -719,109 +1273,855 @@ elif menu == "🔐 Admin Panel":
                 )
 
                 add_aarti = st.form_submit_button(
-                    "🙏 आरती Save करें"
+                    "➕ Add Aarti"
                 )
 
                 if add_aarti:
 
-                    if new_aarti_title.strip() and new_aarti_text.strip():
+                    if (
+                        not new_aarti_title.strip()
+                        or
+                        not new_aarti_text.strip()
+                    ):
+
+                        st.warning(
+                            "आरती का नाम और पाठ दोनों भरें।"
+                        )
+
+                    else:
 
                         aartis.append(
                             {
-                                "id": uuid.uuid4().hex,
-                                "title": new_aarti_title,
-                                "text": new_aarti_text
+                                "id":
+                                f"aarti_{uuid.uuid4().hex}",
+
+                                "title":
+                                new_aarti_title.strip(),
+
+                                "text":
+                                new_aarti_text.strip()
                             }
                         )
 
-                        save_json(AARTI_FILE, aartis)
+                        save_json(
+                            AARTI_FILE,
+                            aartis
+                        )
 
-                        st.success("नई आरती save हो गई।")
+                        st.success(
+                            "नई आरती add हो गई।"
+                        )
+
                         st.rerun()
-
-                    else:
-                        st.warning("आरती का नाम और पूरा पाठ भरें।")
 
             st.divider()
 
-            st.subheader("🗑️ आरती हटाएँ")
-
-            if not aartis:
-                st.info("हटाने के लिए कोई आरती नहीं है।")
+            st.subheader(
+                "✏️ Existing आरती"
+            )
 
             for index, aarti in enumerate(aartis):
 
-                title = aarti.get("title", f"आरती {index + 1}")
+                with st.expander(
+                    f"🙏 {aarti.get('title', 'आरती')}"
+                ):
 
-                col1, col2 = st.columns([5, 1])
+                    edit_title = st.text_input(
+                        "आरती का नाम",
+                        value=aarti.get(
+                            "title",
+                            ""
+                        ),
+                        key=f"aarti_title_{index}"
+                    )
 
-                with col1:
-                    st.write(f"🙏 {title}")
+                    edit_text = st.text_area(
+                        "आरती का पाठ",
+                        value=aarti.get(
+                            "text",
+                            ""
+                        ),
+                        height=250,
+                        key=f"aarti_text_{index}"
+                    )
 
-                with col2:
+                    col1, col2 = st.columns(2)
 
-                    if st.button(
-                        "Delete",
-                        key=f"delete_aarti_{index}"
-                    ):
+                    with col1:
 
-                        aartis.pop(index)
-                        save_json(AARTI_FILE, aartis)
-                        st.success("आरती हटा दी गई।")
-                        st.rerun()
+                        if st.button(
+                            "💾 Save",
+                            key=f"save_aarti_{index}"
+                        ):
 
+                            aartis[index]["title"] = (
+                                edit_title
+                            )
 
-        # ==================================================
-        # GALLERY EDIT
-        # ==================================================
+                            aartis[index]["text"] = (
+                                edit_text
+                            )
+
+                            save_json(
+                                AARTI_FILE,
+                                aartis
+                            )
+
+                            st.success(
+                                "आरती update हो गई।"
+                            )
+
+                            st.rerun()
+
+                    with col2:
+
+                        if st.button(
+                            "🗑️ Delete",
+                            key=f"delete_aarti_{index}"
+                        ):
+
+                            aartis.pop(index)
+
+                            save_json(
+                                AARTI_FILE,
+                                aartis
+                            )
+
+                            st.success(
+                                "आरती delete हो गई।"
+                            )
+
+                            st.rerun()
+
+        # =================================================
+        # PROGRAM EDIT
+        # =================================================
 
         with admin_tab3:
 
-            st.subheader("🗑️ Gallery से फोटो हटाएँ")
+            st.subheader(
+                "🎉 कार्यक्रम Manage करें"
+            )
 
-            gallery_images = [
-                file for file in GALLERY_DIR.iterdir()
-                if file.is_file()
-                and file.suffix.lower()
-                in [".png", ".jpg", ".jpeg", ".webp"]
-            ]
+            # ADD PROGRAM
+            with st.form(
+                "add_program_form"
+            ):
 
-            if not gallery_images:
-                st.info("Gallery में कोई फोटो नहीं है।")
+                st.write(
+                    "➕ नया कार्यक्रम"
+                )
 
-            for index, image_path in enumerate(sorted(gallery_images)):
+                program_title = st.text_input(
+                    "कार्यक्रम का नाम"
+                )
 
-                col1, col2 = st.columns([3, 1])
+                program_date = st.text_input(
+                    "तारीख",
+                    placeholder="जैसे 20-10-2026"
+                )
 
-                with col1:
-                    st.image(str(image_path), width=180)
+                program_time = st.text_input(
+                    "समय",
+                    placeholder="जैसे शाम 7:00 बजे"
+                )
 
-                with col2:
+                program_place = st.text_input(
+                    "स्थान"
+                )
 
-                    if st.button(
-                        "❌ Delete",
-                        key=f"delete_gallery_{index}"
-                    ):
+                program_details = st.text_area(
+                    "विवरण",
+                    height=100
+                )
 
-                        image_path.unlink()
-                        st.success("फोटो हटा दी गई।")
+                add_program = st.form_submit_button(
+                    "➕ कार्यक्रम जोड़ें"
+                )
+
+                if add_program:
+
+                    if not program_title.strip():
+
+                        st.warning(
+                            "कार्यक्रम का नाम भरें।"
+                        )
+
+                    else:
+
+                        programs.append(
+                            {
+                                "id":
+                                f"program_{uuid.uuid4().hex}",
+
+                                "title":
+                                program_title.strip(),
+
+                                "date":
+                                program_date.strip(),
+
+                                "time":
+                                program_time.strip(),
+
+                                "place":
+                                program_place.strip(),
+
+                                "details":
+                                program_details.strip()
+                            }
+                        )
+
+                        save_json(
+                            PROGRAMS_FILE,
+                            programs
+                        )
+
+                        st.success(
+                            "नया कार्यक्रम add हो गया।"
+                        )
+
                         st.rerun()
 
+            st.divider()
 
-# ==================================================
+            st.subheader(
+                "✏️ Existing कार्यक्रम"
+            )
+
+            for index, program in enumerate(programs):
+
+                with st.expander(
+                    f"🎉 {program.get('title', 'कार्यक्रम')}"
+                ):
+
+                    edit_program_title = st.text_input(
+                        "कार्यक्रम का नाम",
+                        value=program.get(
+                            "title",
+                            ""
+                        ),
+                        key=f"program_title_{index}"
+                    )
+
+                    edit_program_date = st.text_input(
+                        "तारीख",
+                        value=program.get(
+                            "date",
+                            ""
+                        ),
+                        key=f"program_date_{index}"
+                    )
+
+                    edit_program_time = st.text_input(
+                        "समय",
+                        value=program.get(
+                            "time",
+                            ""
+                        ),
+                        key=f"program_time_{index}"
+                    )
+
+                    edit_program_place = st.text_input(
+                        "स्थान",
+                        value=program.get(
+                            "place",
+                            ""
+                        ),
+                        key=f"program_place_{index}"
+                    )
+
+                    edit_program_details = st.text_area(
+                        "विवरण",
+                        value=program.get(
+                            "details",
+                            ""
+                        ),
+                        height=100,
+                        key=f"program_details_{index}"
+                    )
+
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+
+                        if st.button(
+                            "💾 Save",
+                            key=f"save_program_{index}"
+                        ):
+
+                            programs[index]["title"] = (
+                                edit_program_title
+                            )
+
+                            programs[index]["date"] = (
+                                edit_program_date
+                            )
+
+                            programs[index]["time"] = (
+                                edit_program_time
+                            )
+
+                            programs[index]["place"] = (
+                                edit_program_place
+                            )
+
+                            programs[index]["details"] = (
+                                edit_program_details
+                            )
+
+                            save_json(
+                                PROGRAMS_FILE,
+                                programs
+                            )
+
+                            st.success(
+                                "कार्यक्रम update हो गया।"
+                            )
+
+                            st.rerun()
+
+                    with col2:
+
+                        if st.button(
+                            "🗑️ Delete",
+                            key=f"delete_program_{index}"
+                        ):
+
+                            programs.pop(index)
+
+                            save_json(
+                                PROGRAMS_FILE,
+                                programs
+                            )
+
+                            st.success(
+                                "कार्यक्रम delete हो गया।"
+                            )
+
+                            st.rerun()
+
+        # =================================================
+        # GALLERY EDIT
+        # =================================================
+
+        with admin_tab4:
+
+            st.subheader(
+                "🖼️ Gallery Manage करें"
+            )
+
+            gallery_images = sorted(
+                [
+                    file
+                    for file in GALLERY_DIR.iterdir()
+                    if file.is_file()
+                    and file.suffix.lower()
+                    in [
+                        ".png",
+                        ".jpg",
+                        ".jpeg",
+                        ".webp"
+                    ]
+                ]
+            )
+
+            st.write(
+                f"📸 कुल images: {len(gallery_images)}"
+            )
+
+            if gallery_images:
+
+                if st.button(
+                    "🗑️ Delete ALL Gallery Images"
+                ):
+
+                    for image_path in gallery_images:
+
+                        try:
+                            image_path.unlink()
+
+                        except Exception:
+                            pass
+
+                    st.success(
+                        "सभी Gallery images delete हो गईं।"
+                    )
+
+                    st.rerun()
+
+                for index, image_path in enumerate(
+                    gallery_images
+                ):
+
+                    with st.expander(
+                        f"🖼️ {image_path.name}"
+                    ):
+
+                        st.image(
+                            str(image_path),
+                            use_container_width=True
+                        )
+
+                        if st.button(
+                            "🗑️ Delete this image",
+                            key=f"delete_gallery_{index}"
+                        ):
+
+                            try:
+
+                                image_path.unlink()
+
+                                st.success(
+                                    "Image delete हो गई।"
+                                )
+
+                                st.rerun()
+
+                            except Exception as error:
+
+                                st.error(
+                                    f"Image delete नहीं हुई: {error}"
+                                )
+
+            else:
+
+                st.info(
+                    "Gallery खाली है।"
+                )
+
+        # =================================================
+        # ACCOUNT EDIT
+        # =================================================
+
+        with admin_tab5:
+
+            st.subheader(
+                "💰 हिसाब-किताब Manage करें"
+            )
+
+            account_tab1, account_tab2 = st.tabs(
+                [
+                    "📥 चंदा जोड़ें",
+                    "📤 खर्च जोड़ें"
+                ]
+            )
+
+            # ------------------------------------------------
+            # ADD DONATION
+            # ------------------------------------------------
+
+            with account_tab1:
+
+                with st.form(
+                    "donation_form"
+                ):
+
+                    donor_name = st.text_input(
+                        "नाम"
+                    )
+
+                    donor_date = st.text_input(
+                        "तारीख",
+                        placeholder="जैसे 16-09-2026"
+                    )
+
+                    donor_amount = st.number_input(
+                        "राशि",
+                        min_value=0,
+                        step=100
+                    )
+
+                    donor_method = st.selectbox(
+                        "माध्यम",
+                        [
+                            "Cash",
+                            "UPI",
+                            "Bank",
+                            "Other"
+                        ]
+                    )
+
+                    add_donation = st.form_submit_button(
+                        "➕ चंदा जोड़ें"
+                    )
+
+                    if add_donation:
+
+                        if not donor_name.strip():
+
+                            st.warning(
+                                "नाम भरें।"
+                            )
+
+                        elif donor_amount <= 0:
+
+                            st.warning(
+                                "राशि 0 से ज्यादा रखें।"
+                            )
+
+                        else:
+
+                            accounts["donations"].append(
+                                {
+                                    "id":
+                                    f"donation_{uuid.uuid4().hex}",
+
+                                    "नाम":
+                                    donor_name.strip(),
+
+                                    "तारीख":
+                                    donor_date.strip(),
+
+                                    "राशि":
+                                    donor_amount,
+
+                                    "माध्यम":
+                                    donor_method
+                                }
+                            )
+
+                            save_json(
+                                ACCOUNT_FILE,
+                                accounts
+                            )
+
+                            st.success(
+                                "चंदा add हो गया।"
+                            )
+
+                            st.rerun()
+
+            # ------------------------------------------------
+            # ADD EXPENSE
+            # ------------------------------------------------
+
+            with account_tab2:
+
+                with st.form(
+                    "expense_form"
+                ):
+
+                    expense_name = st.text_input(
+                        "खर्च का नाम"
+                    )
+
+                    expense_date = st.text_input(
+                        "तारीख",
+                        placeholder="जैसे 16-09-2026"
+                    )
+
+                    expense_amount = st.number_input(
+                        "राशि",
+                        min_value=0,
+                        step=100
+                    )
+
+                    add_expense = st.form_submit_button(
+                        "➕ खर्च जोड़ें"
+                    )
+
+                    if add_expense:
+
+                        if not expense_name.strip():
+
+                            st.warning(
+                                "खर्च का नाम भरें।"
+                            )
+
+                        elif expense_amount <= 0:
+
+                            st.warning(
+                                "राशि 0 से ज्यादा रखें।"
+                            )
+
+                        else:
+
+                            accounts["expenses"].append(
+                                {
+                                    "id":
+                                    f"expense_{uuid.uuid4().hex}",
+
+                                    "खर्च":
+                                    expense_name.strip(),
+
+                                    "तारीख":
+                                    expense_date.strip(),
+
+                                    "राशि":
+                                    expense_amount
+                                }
+                            )
+
+                            save_json(
+                                ACCOUNT_FILE,
+                                accounts
+                            )
+
+                            st.success(
+                                "खर्च add हो गया।"
+                            )
+
+                            st.rerun()
+
+            st.divider()
+
+            # =================================================
+            # DONATION EDIT
+            # =================================================
+
+            st.subheader(
+                "📥 चंदा Edit / Delete"
+            )
+
+            for index, item in enumerate(
+                accounts["donations"]
+            ):
+
+                with st.expander(
+                    f"👤 {item.get('नाम', 'नाम')} "
+                    f"— ₹{float(item.get('राशि', 0)):,.0f}"
+                ):
+
+                    d_name = st.text_input(
+                        "नाम",
+                        value=item.get(
+                            "नाम",
+                            ""
+                        ),
+                        key=f"d_name_{index}"
+                    )
+
+                    d_date = st.text_input(
+                        "तारीख",
+                        value=item.get(
+                            "तारीख",
+                            ""
+                        ),
+                        key=f"d_date_{index}"
+                    )
+
+                    d_amount = st.number_input(
+                        "राशि",
+                        min_value=0,
+                        value=int(
+                            float(
+                                item.get(
+                                    "राशि",
+                                    0
+                                )
+                            )
+                        ),
+                        step=100,
+                        key=f"d_amount_{index}"
+                    )
+
+                    methods = [
+                        "Cash",
+                        "UPI",
+                        "Bank",
+                        "Other"
+                    ]
+
+                    old_method = item.get(
+                        "माध्यम",
+                        "Cash"
+                    )
+
+                    if old_method not in methods:
+                        old_method = "Cash"
+
+                    d_method = st.selectbox(
+                        "माध्यम",
+                        methods,
+                        index=methods.index(
+                            old_method
+                        ),
+                        key=f"d_method_{index}"
+                    )
+
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+
+                        if st.button(
+                            "💾 Save",
+                            key=f"save_donation_{index}"
+                        ):
+
+                            accounts["donations"][index] = {
+                                "id":
+                                item.get(
+                                    "id",
+                                    f"donation_{uuid.uuid4().hex}"
+                                ),
+
+                                "नाम":
+                                d_name,
+
+                                "तारीख":
+                                d_date,
+
+                                "राशि":
+                                d_amount,
+
+                                "माध्यम":
+                                d_method
+                            }
+
+                            save_json(
+                                ACCOUNT_FILE,
+                                accounts
+                            )
+
+                            st.success(
+                                "चंदा update हो गया।"
+                            )
+
+                            st.rerun()
+
+                    with col2:
+
+                        if st.button(
+                            "🗑️ Delete",
+                            key=f"delete_donation_{index}"
+                        ):
+
+                            accounts["donations"].pop(
+                                index
+                            )
+
+                            save_json(
+                                ACCOUNT_FILE,
+                                accounts
+                            )
+
+                            st.success(
+                                "चंदा delete हो गया।"
+                            )
+
+                            st.rerun()
+
+            # =================================================
+            # EXPENSE EDIT
+            # =================================================
+
+            st.subheader(
+                "📤 खर्च Edit / Delete"
+            )
+
+            for index, item in enumerate(
+                accounts["expenses"]
+            ):
+
+                with st.expander(
+                    f"🧾 {item.get('खर्च', 'खर्च')} "
+                    f"— ₹{float(item.get('राशि', 0)):,.0f}"
+                ):
+
+                    e_name = st.text_input(
+                        "खर्च",
+                        value=item.get(
+                            "खर्च",
+                            ""
+                        ),
+                        key=f"e_name_{index}"
+                    )
+
+                    e_date = st.text_input(
+                        "तारीख",
+                        value=item.get(
+                            "तारीख",
+                            ""
+                        ),
+                        key=f"e_date_{index}"
+                    )
+
+                    e_amount = st.number_input(
+                        "राशि",
+                        min_value=0,
+                        value=int(
+                            float(
+                                item.get(
+                                    "राशि",
+                                    0
+                                )
+                            )
+                        ),
+                        step=100,
+                        key=f"e_amount_{index}"
+                    )
+
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+
+                        if st.button(
+                            "💾 Save",
+                            key=f"save_expense_{index}"
+                        ):
+
+                            accounts["expenses"][index] = {
+                                "id":
+                                item.get(
+                                    "id",
+                                    f"expense_{uuid.uuid4().hex}"
+                                ),
+
+                                "खर्च":
+                                e_name,
+
+                                "तारीख":
+                                e_date,
+
+                                "राशि":
+                                e_amount
+                            }
+
+                            save_json(
+                                ACCOUNT_FILE,
+                                accounts
+                            )
+
+                            st.success(
+                                "खर्च update हो गया।"
+                            )
+
+                            st.rerun()
+
+                    with col2:
+
+                        if st.button(
+                            "🗑️ Delete",
+                            key=f"delete_expense_{index}"
+                        ):
+
+                            accounts["expenses"].pop(
+                                index
+                            )
+
+                            save_json(
+                                ACCOUNT_FILE,
+                                accounts
+                            )
+
+                            st.success(
+                                "खर्च delete हो गया।"
+                            )
+
+                            st.rerun()
+
+
+# =========================================================
 # FOOTER
-# ==================================================
+# =========================================================
+
+st.divider()
 
 st.markdown(
     f"""
-    <div class="footer-box">
-        <h3>🪔 {html.escape(str(content.get("committee_name", DEFAULT_CONTENT["committee_name"])))}</h3>
-        <p>
-            {html.escape(str(content.get("location", DEFAULT_CONTENT["location"])))}
-            • {html.escape(str(content.get("footer_text", DEFAULT_CONTENT["footer_text"])))}
-        </p>
-        <p>© 2026 Nav Durga Utsav Samiti</p>
+    <div class="footer-text">
+        🙏 {content.get("footer_text", "श्रद्धा • सेवा • संस्कार")}
     </div>
     """,
     unsafe_allow_html=True
-)           
+)
