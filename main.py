@@ -115,6 +115,8 @@ DEFAULT_PROGRAMS = [
 # =========================================================
 
 DEFAULT_ACCOUNTS = {
+    "public_donation_amount": False,
+
     "donations": [
         {
             "id": "donation_1",
@@ -226,6 +228,9 @@ if "donations" not in accounts:
 if "expenses" not in accounts:
     accounts["expenses"] = []
 
+if "public_donation_amount" not in accounts:
+    accounts["public_donation_amount"] = False
+
 # =========================================================
 # SESSION STATE
 # =========================================================
@@ -240,65 +245,41 @@ if "gallery_version" not in st.session_state:
 # CSS
 # =========================================================
 
-st.markdown(
-    """
-    <style>
-
-    .main-title {
-        font-size: 42px;
-        font-weight: 800;
-        text-align: center;
-        margin-bottom: 5px;
-    }
-
-    .sub-title {
-        font-size: 20px;
-        text-align: center;
-        margin-bottom: 25px;
-    }
-
-    .hero-box {
-        padding: 35px;
-        border-radius: 25px;
-        text-align: center;
-        border: 1px solid rgba(128,128,128,0.30);
-        margin-bottom: 25px;
-    }
-
-    .footer-text {
-        text-align: center;
-        opacity: 0.70;
-        padding: 15px;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""<style>
+.festival-header {position:relative; overflow:hidden; min-height:390px; margin:0 0 22px 0; padding:35px 25px 30px; border-radius:22px; border:2px solid #ffd35a; text-align:center; background:radial-gradient(circle at 72% 45%,rgba(255,137,46,.55),transparent 42%),linear-gradient(110deg,#64151d 0%,#8f2d1f 38%,#d05228 100%); box-shadow:inset 0 0 0 8px rgba(255,211,90,.08),inset 0 0 0 10px rgba(255,211,90,.35);}
+.festival-header:before {content:""; position:absolute; inset:9px; border:1px solid rgba(255,220,100,.75); border-radius:17px; pointer-events:none;}
+.festival-header:after {content:""; position:absolute; left:-5%; right:-5%; bottom:-170px; height:310px; border-top:2px solid rgba(255,220,100,.75); border-radius:50%; pointer-events:none;}
+.header-diya {position:relative; z-index:3; margin:10px auto 28px; width:82px; height:82px; border:2px solid #ffd95a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:43px; background:rgba(95,12,25,.20); box-shadow:0 0 18px rgba(255,214,70,.20);}
+.header-title {position:relative; z-index:4; margin:0; color:#ffe18a; font-family:"Nirmala UI","Mangal",serif; font-size:clamp(34px,5vw,67px); font-weight:900; line-height:1.25; text-shadow:3px 3px 0 #551019,5px 5px 8px rgba(0,0,0,.45);}
+.header-line {position:relative; z-index:4; width:220px; height:2px; margin:20px auto 10px; background:#ffd85d;}
+.header-dot {position:relative; z-index:4; color:#ffe28b; font-size:25px; line-height:1;}
+.header-location {position:relative; z-index:4; margin-top:18px; color:#ffe58a; font-family:Arial,sans-serif; font-size:23px; font-weight:800; letter-spacing:1px;}
+.header-tagline {position:relative; z-index:4; display:inline-block; margin-top:28px; padding:11px 55px; min-width:420px; border:1px solid #ffd85d; border-radius:45px; color:#ffe7a0; background:rgba(82,5,24,.82); font-family:"Nirmala UI","Mangal",serif; font-size:27px; font-weight:600; box-shadow:0 3px 12px rgba(0,0,0,.25);}
+.header-arc {position:absolute; z-index:1; width:410px; height:260px; border:2px solid rgba(255,220,100,.75); border-bottom:0; border-radius:50% 50% 0 0; pointer-events:none;}
+.arc-left {left:-120px; bottom:-60px; transform:rotate(-3deg);}
+.arc-right {right:-120px; bottom:-60px; transform:rotate(3deg);}
+.hero-box {padding:35px; border-radius:25px; text-align:center; border:1px solid rgba(128,128,128,.30); margin-bottom:25px;}
+.footer-text {text-align:center; opacity:.70; padding:15px;}
+@media (max-width:700px){.festival-header{min-height:330px;padding:25px 10px}.header-tagline{min-width:0;width:88%;padding:11px 8px;font-size:21px}.header-title{font-size:36px}.header-arc{width:300px;height:210px}.header-diya{margin-bottom:18px}}
+</style>""", unsafe_allow_html=True)
 
 # =========================================================
 # WEBSITE HEADER
 # =========================================================
 
-st.markdown(
-    f"""
-    <div class="main-title">
-        🙏 {content.get("committee_name", "नव दुर्गा उत्सव समिति")}
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+header_name = content.get("committee_name", "नव दुर्गा उत्सव समिति")
+header_location = content.get("location", "NEW SALAIYA").upper()
 
-st.markdown(
-    f"""
-    <div class="sub-title">
-        {content.get("location", "")}
-        •
-        {content.get("tagline", "")}
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown(f"""<div class="festival-header">
+<div class="header-arc arc-left"></div>
+<div class="header-arc arc-right"></div>
+<div class="header-diya">🪔</div>
+<div class="header-title">{header_name}</div>
+<div class="header-line"></div>
+<div class="header-dot">•</div>
+<div class="header-location">{header_location}</div>
+<div class="header-tagline">✧ &nbsp; श्रद्धा • सेवा • संस्कार &nbsp; ✧</div>
+</div>""", unsafe_allow_html=True)
 
 # =========================================================
 # MENU
@@ -725,12 +706,14 @@ elif menu == "💰 हिसाब-किताब":
             start=1
         ):
 
-            donation_rows.append(
+            amount_is_public = accounts.get("public_donation_amount", False)
+
+        donation_rows.append(
                 {
                     "क्र.": number,
                     "👤 नाम": item.get("नाम", ""),
                     "📅 तारीख": item.get("तारीख", ""),
-                    "💰 राशि": f"₹{float(item.get('राशि', 0)):,.0f}",
+                    "💰 राशि": f"₹{float(item.get('राशि', 0)):,.0f}" if amount_is_public else "...",
                     "💳 माध्यम": item.get("माध्यम", "")
                 }
             )
@@ -1087,6 +1070,34 @@ elif menu == "🔐 Admin Panel":
                 "💰 हिसाब Edit"
             ]
         )
+
+        # =================================================
+        # PUBLIC DONATION AMOUNT VISIBILITY
+        # =================================================
+
+        st.divider()
+        st.subheader("👁️ चंदा राशि Public / Private")
+
+        current_amount_visibility = accounts.get(
+            "public_donation_amount",
+            False
+        )
+
+        amount_visibility = st.toggle(
+            "💰 Public Website पर चंदे की राशि दिखाएँ",
+            value=current_amount_visibility,
+            key="public_donation_amount_toggle"
+        )
+
+        if amount_visibility != current_amount_visibility:
+            accounts["public_donation_amount"] = amount_visibility
+            save_json(ACCOUNT_FILE, accounts)
+            st.rerun()
+
+        if amount_visibility:
+            st.success("🟢 ON: Public को चंदे की पूरी राशि दिखाई देगी।")
+        else:
+            st.info("🔒 OFF: Public को राशि की जगह केवल ... दिखाई देगा।")
 
         # =================================================
         # WEBSITE EDIT
