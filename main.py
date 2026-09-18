@@ -2,6 +2,8 @@ import streamlit as st
 from pathlib import Path
 import json
 import uuid
+import base64
+import requests
 
 # =========================================================
 # PAGE SETUP
@@ -151,21 +153,193 @@ DEFAULT_ACCOUNTS = {
 }
 
 # =========================================================
-# JSON FUNCTIONS
+# PERSISTENT STORAGE
+# =========================================================
+# If GitHub secrets are configured, JSON data and Gallery images
+# are stored in the GitHub repository so they survive Streamlit
+# Cloud restarts/redeployments.
+#
+# Add these to Streamlit Secrets:
+# GITHUB_TOKEN = "your_github_token"
+# GITHUB_REPO = "username/repository"
+# GITHUB_BRANCH = "main"
 # =========================================================
 
+# GitHub persistence is optional. The app also works on a local PC
+# when Streamlit secrets.toml has not been created yet.
+def get_secret(name, default=""):
+    try:
+        return st.secrets.get(name, default)
+    except Exception:
+        # No secrets.toml / secrets directory: use environment variables or default.
+        import os
+        return os.environ.get(name, default)
+
+GITHUB_TOKEN = get_secret("GITHUB_TOKEN", "")
+GITHUB_REPO = get_secret("GITHUB_REPO", "")
+GITHUB_BRANCH = get_secret("GITHUB_BRANCH", "main")
+
+GITHUB_API = "https://api.github.com"
+GITHUB_ENABLED = bool(GITHUB_TOKEN and GITHUB_REPO)
+
+
+def github_headers():
+    return {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+
+
+def github_get_file(repo_path):
+    if not GITHUB_ENABLED:
+        return None, None
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{repo_path}"
+    response = requests.get(
+        url,
+        headers=github_headers(),
+        params={"ref": GITHUB_BRANCH},
+        timeout=20
+    )
+
+    if response.status_code == 404:
+        return None, None
+
+    response.raise_for_status()
+    payload = response.json()
+
+    if payload.get("type") != "file":
+        return None, None
+
+    raw = base64.b64decode(payload["content"])
+    return raw, payload.get("sha")
+
+
+def github_save_file(repo_path, raw_bytes, message):
+    if not GITHUB_ENABLED:
+        return False
+
+    _, sha = github_get_file(repo_path)
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{repo_path}"
+
+    body = {
+        "message": message,
+        "content": base64.b64encode(raw_bytes).decode("utf-8"),
+        "branch": GITHUB_BRANCH
+    }
+
+    if sha:
+        body["sha"] = sha
+
+    response = requests.put(
+        url,
+        headers=github_headers(),
+        json=body,
+        timeout=30
+    )
+    response.raise_for_status()
+    return True
+
+
+def github_delete_file(repo_path, message):
+    if not GITHUB_ENABLED:
+        return False
+
+    _, sha = github_get_file(repo_path)
+
+    if not sha:
+        return True
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{repo_path}"
+
+    response = requests.delete(
+        url,
+        headers=github_headers(),
+        json={
+            "message": message,
+            "sha": sha,
+            "branch": GITHUB_BRANCH
+        },
+        timeout=30
+    )
+    response.raise_for_status()
+    return True
+
+
+def github_list_files(repo_path):
+    if not GITHUB_ENABLED:
+        return []
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{repo_path}"
+    response = requests.get(
+        url,
+        headers=github_headers(),
+        params={"ref": GITHUB_BRANCH},
+        timeout=20
+    )
+
+    if response.status_code == 404:
+        return []
+
+    response.raise_for_status()
+    return response.json()
+
+
 def save_json(file_path, data):
-    with open(file_path, "w", encoding="utf-8") as file:
-        json.dump(
-            data,
-            file,
-            ensure_ascii=False,
-            indent=4
-        )
+    raw = json.dumps(
+        data,
+        ensure_ascii=False,
+        indent=4
+    ).encode("utf-8")
+
+    # Always keep a local copy.
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_bytes(raw)
+
+    # Also save remotely when GitHub storage is configured.
+    if GITHUB_ENABLED:
+        repo_path = str(file_path.relative_to(BASE_DIR)).replace("\\", "/")
+        try:
+            github_save_file(
+                repo_path,
+                raw,
+                f"Update {repo_path}"
+            )
+        except Exception as error:
+            st.warning(f"Remote save failed; local copy kept: {error}")
 
 
 def load_json(file_path, default_data):
 
+    # Prefer the persistent GitHub copy.
+    # If GitHub does not contain the file yet, upload the existing
+    # local copy first so existing data is preserved.
+    if GITHUB_ENABLED:
+        repo_path = str(file_path.relative_to(BASE_DIR)).replace("\\", "/")
+        try:
+            raw, _ = github_get_file(repo_path)
+
+            if raw:
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+                file_path.write_bytes(raw)
+                return json.loads(raw.decode("utf-8"))
+
+            if file_path.exists():
+                with open(file_path, "rb") as file:
+                    local_raw = file.read()
+                github_save_file(
+                    repo_path,
+                    local_raw,
+                    f"Initial backup of {repo_path}"
+                )
+                return json.loads(local_raw.decode("utf-8"))
+
+        except Exception as error:
+            st.warning(f"GitHub sync issue for {file_path.name}; local data kept: {error}")
+
+    # Fall back to local storage.
     if not file_path.exists():
         save_json(file_path, default_data)
         return default_data
@@ -177,6 +351,73 @@ def load_json(file_path, default_data):
     except Exception:
         save_json(file_path, default_data)
         return default_data
+
+
+def sync_gallery_from_github():
+    """Keep Gallery synchronized with GitHub without deleting local images."""
+    if not GITHUB_ENABLED:
+        return
+
+    try:
+        GALLERY_DIR.mkdir(parents=True, exist_ok=True)
+        remote_files = github_list_files("assets/gallery")
+        remote_names = {
+            Path(item.get("name", "")).name
+            for item in remote_files
+            if item.get("type") == "file"
+            and Path(item.get("name", "")).suffix.lower() in [".png", ".jpg", ".jpeg", ".webp"]
+        }
+
+        # First backup every existing local Gallery image that is not remote yet.
+        for local_path in GALLERY_DIR.iterdir():
+            if not local_path.is_file():
+                continue
+            if local_path.suffix.lower() not in [".png", ".jpg", ".jpeg", ".webp"]:
+                continue
+            if local_path.name not in remote_names:
+                github_save_file(
+                    f"assets/gallery/{local_path.name}",
+                    local_path.read_bytes(),
+                    f"Initial backup of Gallery image {local_path.name}"
+                )
+
+        # Then restore remote images missing from the local cache.
+        for name in remote_names:
+            local_path = GALLERY_DIR / name
+            if local_path.exists():
+                continue
+            raw, _ = github_get_file(f"assets/gallery/{name}")
+            if raw:
+                local_path.write_bytes(raw)
+
+    except Exception as error:
+        # Local gallery still works if GitHub is temporarily unavailable.
+        st.warning(f"Gallery backup/sync issue; local images kept: {error}")
+
+
+def save_gallery_image(file_name, raw_bytes):
+    local_path = GALLERY_DIR / file_name
+    local_path.write_bytes(raw_bytes)
+
+    if GITHUB_ENABLED:
+        github_save_file(
+            f"assets/gallery/{file_name}",
+            raw_bytes,
+            f"Add Gallery image {file_name}"
+        )
+
+
+def delete_gallery_image(file_name):
+    local_path = GALLERY_DIR / file_name
+
+    if local_path.exists():
+        local_path.unlink()
+
+    if GITHUB_ENABLED:
+        github_delete_file(
+            f"assets/gallery/{file_name}",
+            f"Delete Gallery image {file_name}"
+        )
 
 
 # =========================================================
@@ -240,6 +481,9 @@ if "admin_logged_in" not in st.session_state:
 
 if "gallery_version" not in st.session_state:
     st.session_state.gallery_version = 0
+
+# Sync persistent Gallery from GitHub into the local cache.
+sync_gallery_from_github()
 
 # =========================================================
 # CSS
@@ -485,14 +729,14 @@ elif menu == "🖼️ Gallery":
 
         save_path = GALLERY_DIR / file_name
 
-        with open(
-            save_path,
-            "wb"
-        ) as file:
-
-            file.write(
-                uploaded_image.getbuffer()
+        try:
+            save_gallery_image(
+                file_name,
+                uploaded_image.getvalue()
             )
+        except Exception as error:
+            st.error(f"Image save नहीं हुई: {error}")
+            st.stop()
 
         st.success(
             "Image Gallery में upload हो गई।"
@@ -1054,6 +1298,14 @@ elif menu == "🔐 Admin Panel":
         st.success(
             "Admin login successful."
         )
+
+        if GITHUB_ENABLED:
+            st.success("☁️ Permanent storage: GitHub connected")
+        else:
+            st.info(
+                "💾 Local storage active. Permanent cloud storage के लिए "
+                "GITHUB_TOKEN और GITHUB_REPO Secrets सेट करें।"
+            )
 
         if st.button("🚪 Logout"):
 
@@ -1647,10 +1899,8 @@ elif menu == "🔐 Admin Panel":
                 ):
 
                     for image_path in gallery_images:
-
                         try:
-                            image_path.unlink()
-
+                            delete_gallery_image(image_path.name)
                         except Exception:
                             pass
 
@@ -1679,8 +1929,7 @@ elif menu == "🔐 Admin Panel":
                         ):
 
                             try:
-
-                                image_path.unlink()
+                                delete_gallery_image(image_path.name)
 
                                 st.success(
                                     "Image delete हो गई।"
