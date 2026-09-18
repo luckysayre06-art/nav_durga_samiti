@@ -37,7 +37,7 @@ AARTI_FILE = DATA_DIR / "aarti.json"
 ACCOUNT_FILE = DATA_DIR / "accounts.json"
 PROGRAMS_FILE = DATA_DIR / "programs.json"
 
-ADMIN_PASSWORD = "HIMANSHU@786"
+ADMIN_PASSWORD = "966934"
 
 # =========================================================
 # DEFAULT WEBSITE DATA
