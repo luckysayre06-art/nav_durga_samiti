@@ -945,19 +945,23 @@ elif menu == "💰 हिसाब-किताब":
 
         donation_rows = []
 
+        amount_is_public = accounts.get("public_donation_amount", False)
+
         for number, item in enumerate(
             accounts["donations"],
             start=1
         ):
 
-            amount_is_public = accounts.get("public_donation_amount", False)
-
-        donation_rows.append(
+            donation_rows.append(
                 {
                     "क्र.": number,
                     "👤 नाम": item.get("नाम", ""),
                     "📅 तारीख": item.get("तारीख", ""),
-                    "💰 राशि": f"₹{float(item.get('राशि', 0)):,.0f}" if amount_is_public else "...",
+                    "💰 राशि": (
+                        f"₹{float(item.get('राशि', 0)):,.0f}"
+                        if amount_is_public
+                        else "..."
+                    ),
                     "💳 माध्यम": item.get("माध्यम", "")
                 }
             )
